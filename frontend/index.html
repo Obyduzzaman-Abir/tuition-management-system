@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Tuition Management System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <header>
+        <h1>Tuition Management System</h1>
+        <p>Connecting students with tutors, one post at a time.</p>
+    </header>
+
+    <nav class="tabs">
+        <button class="tab-btn active" data-tab="tab-login">Login</button>
+        <button class="tab-btn" data-tab="tab-posts">Posts</button>
+        <button class="tab-btn" data-tab="tab-applications">Applications</button>
+        <button class="tab-btn" data-tab="tab-schedule">Schedule &amp; Payments</button>
+        <button class="tab-btn" data-tab="tab-feedback">Feedback</button>
+        <button class="tab-btn" data-tab="tab-messages">Messages</button>
+        <button class="tab-btn" data-tab="tab-admin">Admin</button>
+    </nav>
+
+    <main>
+        <section id="tab-login" class="tab-panel active">
+            <h2>Login</h2>
+            <form id="loginForm">
+                <label for="login_email">Email</label>
+                <input type="email" id="login_email" required>
+                <label for="login_password">Password</label>
+                <input type="password" id="login_password" required>
+                <button type="submit">Log In</button>
+            </form>
+            <p id="loginStatusMessage"></p>
+        </section>
+
+        <section id="tab-posts" class="tab-panel">
+            <h2>Open Tuition Posts</h2>
+            <div id="postsList">Loading...</div>
+
+            <h2>Post a New Tuition Requirement</h2>
+            <form id="postForm">
+                <label for="student_id">Student ID</label>
+                <input type="number" id="student_id" required>
+                <label for="title">Title</label>
+                <input type="text" id="title" required>
+                <label for="description">Description</label>
+                <textarea id="description" rows="3"></textarea>
+                <label for="budget">Budget (৳)</label>
+                <input type="number" id="budget" required>
+                <button type="submit">Post Requirement</button>
+            </form>
+            <p id="statusMessage"></p>
+
+            <h2>Apply to a Tuition Post</h2>
+            <form id="applyForm">
+                <label for="post_id">Post ID</label>
+                <input type="number" id="post_id" required>
+                <label for="tutor_id">Tutor ID</label>
+                <input type="number" id="tutor_id" required>
+                <label for="message">Message to Student</label>
+                <textarea id="message" rows="2"></textarea>
+                <label for="proposed_rate">Proposed Rate (৳)</label>
+                <input type="number" id="proposed_rate" required>
+                <button type="submit">Submit Application</button>
+            </form>
+            <p id="applyStatusMessage"></p>
+        </section>
+
+        <section id="tab-applications" class="tab-panel">
+            <h2>Applications</h2>
+            <div id="applicationsList">Loading...</div>
+        </section>
+
+        <section id="tab-schedule" class="tab-panel">
+            <h2>Schedule a Class</h2>
+            <form id="scheduleForm">
+                <label for="selection_id">Selection ID</label>
+                <input type="number" id="selection_id" required>
+                <label for="start_datetime">Start Date &amp; Time</label>
+                <input type="datetime-local" id="start_datetime" required>
+                <label for="end_datetime">End Date &amp; Time</label>
+                <input type="datetime-local" id="end_datetime" required>
+                <label for="sched_location">Location</label>
+                <input type="text" id="sched_location">
+                <label for="sched_notes">Notes</label>
+                <input type="text" id="sched_notes">
+                <button type="submit">Add Schedule</button>
+            </form>
+            <p id="scheduleStatusMessage"></p>
+            <div id="scheduleList">Loading...</div>
+
+            <h2>Record a Payment</h2>
+            <form id="paymentForm">
+                <label for="pay_schedule_id">Schedule ID</label>
+                <input type="number" id="pay_schedule_id" required>
+                <label for="pay_amount">Amount (৳)</label>
+                <input type="number" id="pay_amount" required>
+                <label for="pay_method">Method</label>
+                <input type="text" id="pay_method" placeholder="bKash, Bank Transfer, etc.">
+                <label for="pay_status">Status</label>
+                <select id="pay_status">
+                    <option value="Pending">Pending</option>
+                    <option value="Completed">Completed</option>
+                </select>
+                <button type="submit">Record Payment</button>
+            </form>
+            <p id="paymentStatusMessage"></p>
+            <div id="paymentsList">Loading...</div>
+        </section>
+
+        <section id="tab-feedback" class="tab-panel">
+            <h2>Feedback &amp; Reviews</h2>
+            <div id="feedbackList">Loading...</div>
+        </section>
+
+        <section id="tab-messages" class="tab-panel">
+            <h2>Notifications</h2>
+            <form id="notifForm">
+                <label for="notif_user_id">User ID</label>
+                <input type="number" id="notif_user_id" required>
+                <button type="submit">Load Notifications</button>
+            </form>
+            <div id="notificationsList"></div>
+
+            <h2>Messages</h2>
+            <form id="conversationForm">
+                <label for="conv_student_id">Student ID</label>
+                <input type="number" id="conv_student_id" required>
+                <label for="conv_tutor_id">Tutor ID</label>
+                <input type="number" id="conv_tutor_id" required>
+                <button type="submit">Start / Open Conversation</button>
+            </form>
+            <p id="conversationStatusMessage"></p>
+
+            <form id="messageForm">
+                <label for="msg_conversation_id">Conversation ID</label>
+                <input type="number" id="msg_conversation_id" required>
+                <label for="msg_sender_id">Your User ID</label>
+                <input type="number" id="msg_sender_id" required>
+                <label for="msg_text">Message</label>
+                <input type="text" id="msg_text" required>
+                <button type="submit">Send Message</button>
+            </form>
+            <p id="messageStatusMessage"></p>
+
+            <form id="attachmentForm">
+                <label for="attach_message_id">Message ID</label>
+                <input type="number" id="attach_message_id" required>
+                <label for="attach_file_url">File URL</label>
+                <input type="text" id="attach_file_url" placeholder="https://example.com/file.pdf" required>
+                <label for="attach_file_type">File Type</label>
+                <input type="text" id="attach_file_type" placeholder="pdf, jpg, etc.">
+                <button type="submit">Attach File</button>
+            </form>
+            <p id="attachmentStatusMessage"></p>
+
+            <div id="messagesList"></div>
+        </section>
+
+        <section id="tab-admin" class="tab-panel">
+            <h2>Admin Panel</h2>
+            <form id="verifyTutorForm">
+                <label for="verify_admin_id">Admin ID</label>
+                <input type="number" id="verify_admin_id" value="7" required>
+                <label for="verify_tutor_id">Tutor ID to Verify</label>
+                <input type="number" id="verify_tutor_id" required>
+                <button type="submit">Verify Tutor</button>
+            </form>
+            <p id="verifyStatusMessage"></p>
+
+            <form id="userStatusForm">
+                <label for="status_admin_id">Admin ID</label>
+                <input type="number" id="status_admin_id" value="7" required>
+                <label for="status_user_id">User ID</label>
+                <input type="number" id="status_user_id" required>
+                <label for="status_value">New Status</label>
+                <select id="status_value">
+                    <option value="active">Active</option>
+                    <option value="suspended">Suspended</option>
+                </select>
+                <label for="status_reason">Reason</label>
+                <input type="text" id="status_reason">
+                <button type="submit">Update User Status</button>
+            </form>
+            <p id="userStatusMessage"></p>
+
+            <h3>System Log</h3>
+            <div id="systemLogList">Loading...</div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
