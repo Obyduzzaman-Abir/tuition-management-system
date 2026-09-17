@@ -49,9 +49,11 @@ function renderPaymentCard(p) {
 }
 
 function renderFeedbackCard(f) {
+  const heading = f.tutor_name || 'Feedback received';
   return `
     <div class="card">
-      <h3>${f.student_name} on ${f.tutor_name}</h3>
+      <h3>${heading}</h3>
+      <p class="card-meta anonymous-label">${f.student_name}</p>
       <p class="card-meta">Rating: ${f.rating} / 5</p>
       <p class="card-meta">"${f.comment || ''}"</p>
     </div>`;

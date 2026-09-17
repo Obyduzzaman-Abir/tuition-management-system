@@ -318,18 +318,11 @@ app.get('/api/payments', async (req, res) => {
 
 app.post('/api/feedback', requireRole('Student'), async (req, res) => {
   try {
-    const { schedule_id, rating, comment } = req.body;
+    const { tutor_id, rating, comment } = req.body;
     const studentId = await getStudentId(req.user.user_id);
-    const [scheduleInfo] = await pool.query(
-      `SELECT sel.tutor_id FROM Schedule sc JOIN Selection sel ON sc.selection_id = sel.selection_id WHERE sc.schedule_id = ?`,
-      [schedule_id]
-    );
-    if (scheduleInfo.length === 0) {
-      return res.status(404).json({ message: 'Schedule not found' });
-    }
     const [result] = await pool.query(
-      'INSERT INTO Feedback (schedule_id, student_id, tutor_id, rating, comment) VALUES (?, ?, ?, ?, ?)',
-      [schedule_id, studentId, scheduleInfo[0].tutor_id, rating, comment || null]
+      'INSERT INTO Feedback (student_id, tutor_id, rating, comment) VALUES (?, ?, ?, ?)',
+      [studentId, tutor_id, rating, comment || null]
     );
     res.status(201).json({ message: 'Feedback submitted!', feedback_id: result.insertId });
   } catch (error) {
@@ -337,17 +330,34 @@ app.post('/api/feedback', requireRole('Student'), async (req, res) => {
   }
 });
 
+
 app.get('/api/feedback', async (req, res) => {
   try {
-    const [feedback] = await pool.query(`
-      SELECT f.feedback_id, s_user.name AS student_name, t_user.name AS tutor_name, f.rating, f.comment
-      FROM Feedback f
-      JOIN Student s ON f.student_id = s.student_id
-      JOIN Users s_user ON s.user_id = s_user.user_id
-      JOIN Tutor t ON f.tutor_id = t.tutor_id
-      JOIN Users t_user ON t.user_id = t_user.user_id
-    `);
-    res.json(feedback);
+    if (req.user.role === 'Admin') {
+      const [feedback] = await pool.query(`
+        SELECT f.feedback_id, s_user.name AS student_name, t_user.name AS tutor_name, f.rating, f.comment, f.created_at
+        FROM Feedback f
+        JOIN Student s ON f.student_id = s.student_id
+        JOIN Users s_user ON s.user_id = s_user.user_id
+        JOIN Tutor t ON f.tutor_id = t.tutor_id
+        JOIN Users t_user ON t.user_id = t_user.user_id
+        ORDER BY f.created_at DESC
+      `);
+      return res.json(feedback);
+    }
+
+    if (req.user.role === 'Tutor') {
+      const tutorId = await getTutorId(req.user.user_id);
+      const [feedback] = await pool.query(`
+        SELECT f.feedback_id, 'Anonymous' AS student_name, f.rating, f.comment, f.created_at
+        FROM Feedback f
+        WHERE f.tutor_id = ?
+        ORDER BY f.created_at DESC
+      `, [tutorId]);
+      return res.json(feedback);
+    }
+
+    return res.status(403).json({ message: 'Feedback list is only available to Tutors and Admins.' });
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch feedback', error: error.message });
   }

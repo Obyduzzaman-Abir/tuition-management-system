@@ -11,6 +11,12 @@ document.addEventListener('DOMContentLoaded', () => {
   setupTabListeners();
   setupFormListeners();
   setupNotificationBell();
+
+  document.addEventListener('wheel', () => {
+    if (document.activeElement && document.activeElement.type === 'number') {
+      document.activeElement.blur();
+    }
+  }, { passive: true });
 });
 
 function showAuthScreen() {
@@ -27,8 +33,8 @@ function showMainApp() {
 
   applyRoleVisibility(session.role);
   loadDashboard(session.role);
-  loadScheduleAndPayments(session.role);
-  loadFeedback();
+   if (session.role === 'Student') loadFeedbackTutorOptions();
+  if (session.role === 'Tutor') loadMyFeedback();
   loadMessages(session.role);
   startNotificationPolling();
   if (session.role === 'Admin') {
@@ -40,11 +46,11 @@ function showMainApp() {
 function applyRoleVisibility(role) {
   document.getElementById('studentDashboard').classList.toggle('hidden', role !== 'Student');
   document.getElementById('tutorDashboard').classList.toggle('hidden', role !== 'Tutor');
-  document.getElementById('feedbackTabBtn').classList.toggle('hidden', role === 'Admin');
+    document.getElementById('feedbackTabBtn').classList.toggle('hidden', role === 'Admin');
+  document.getElementById('myFeedbackWrapper').classList.toggle('hidden', role !== 'Tutor');
   document.getElementById('feedbackFormWrapper').classList.toggle('hidden', role !== 'Student');
   document.getElementById('adminTabBtn').classList.toggle('hidden', role !== 'Admin');
   document.getElementById('dashboardTabBtn').classList.toggle('hidden', role === 'Admin');
-  document.getElementById('scheduleTabBtn').classList.toggle('hidden', role === 'Admin');
 
   document.getElementById('conversationPartnerLabel').textContent = role === 'Student' ? 'Tutor' : 'Student';
 
@@ -168,7 +174,7 @@ async function loadNotificationBell() {
       ? notifications.slice(0, 8).map(renderNotification).join('')
       : '<p class="empty-state">No notifications.</p>';
 
-          document.querySelectorAll('#notificationDropdownList .notification-item').forEach(item => {
+    document.querySelectorAll('#notificationDropdownList .notification-item').forEach(item => {
       item.addEventListener('click', async () => {
         await api.markNotificationRead(item.dataset.notificationId);
         loadNotificationBell();
@@ -247,7 +253,6 @@ function attachSelectButtons() {
       try {
         await api.selectTutor(btn.dataset.postId, btn.dataset.tutorId);
         loadDashboard('Student');
-        loadScheduleAndPayments('Student');
       } catch (error) {
         alert(error.message);
       }
@@ -255,39 +260,23 @@ function attachSelectButtons() {
   });
 }
 
-// ---------- Schedule & Payments ----------
-async function loadScheduleAndPayments(role) {
+// ---------- Feedback ----------
+async function loadFeedbackTutorOptions() {
   try {
-    const [selections, schedule, payments] = await Promise.all([
-      api.getMySelections(), api.getSchedule(), api.getPayments(),
-    ]);
-
-    populateSelect(document.getElementById('schedule_selection'), selections, 'selection_id',
-      s => role === 'Student' ? `${s.post_title} — ${s.tutor_name}` : `${s.post_title} — ${s.student_name}`);
-
-    populateSelect(document.getElementById('payment_schedule'), schedule, 'schedule_id',
-      s => `${s.student_name} & ${s.tutor_name} — ${new Date(s.start_datetime).toLocaleString()}`);
-
-    populateSelect(document.getElementById('feedback_schedule'), schedule, 'schedule_id',
-      s => `${s.student_name} & ${s.tutor_name} — ${new Date(s.start_datetime).toLocaleString()}`);
-
-    document.getElementById('scheduleList').innerHTML = schedule.length
-      ? schedule.map(renderScheduleCard).join('') : '<p class="empty-state">No classes scheduled yet.</p>';
-    document.getElementById('paymentsList').innerHTML = payments.length
-      ? payments.map(renderPaymentCard).join('') : '<p class="empty-state">No payments recorded yet.</p>';
+    const selections = await api.getMySelections();
+    const uniqueTutors = Array.from(new Map(selections.map(s => [s.tutor_id, s])).values());
+    populateSelect(document.getElementById('feedback_tutor'), uniqueTutors, 'tutor_id', s => s.tutor_name);
   } catch (error) {
-    console.error('Schedule/payments load failed:', error);
+    console.error('Failed to load feedback tutor options:', error);
   }
 }
-
-// ---------- Feedback ----------
-async function loadFeedback() {
+async function loadMyFeedback() {
   try {
     const feedback = await api.getFeedback();
-    document.getElementById('feedbackList').innerHTML = feedback.length
-      ? feedback.map(renderFeedbackCard).join('') : '<p class="empty-state">No feedback yet.</p>';
+    document.getElementById('myFeedbackList').innerHTML = feedback.length
+      ? feedback.map(renderFeedbackCard).join('') : '<p class="empty-state">No feedback received yet.</p>';
   } catch (error) {
-    console.error('Feedback load failed:', error);
+    console.error('Failed to load your feedback:', error);
   }
 }
 
@@ -374,61 +363,18 @@ function setupFormListeners() {
     }
   });
 
-  document.getElementById('scheduleForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const msg = document.getElementById('scheduleMessage');
-    try {
-      await api.createSchedule({
-        selection_id: document.getElementById('schedule_selection').value,
-        start_datetime: toMySQLDatetime(document.getElementById('schedule_start').value),
-        end_datetime: toMySQLDatetime(document.getElementById('schedule_end').value),
-        location: document.getElementById('schedule_location').value,
-        notes: '',
-      });
-      msg.textContent = 'Scheduled!';
-      msg.className = 'form-message success';
-      document.getElementById('scheduleForm').reset();
-      loadScheduleAndPayments(getSession().role);
-    } catch (error) {
-      msg.textContent = error.message;
-      msg.className = 'form-message error';
-    }
-  });
-
-  document.getElementById('paymentForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const msg = document.getElementById('paymentMessage');
-    try {
-      await api.createPayment({
-        schedule_id: document.getElementById('payment_schedule').value,
-        amount: document.getElementById('payment_amount').value,
-        method: document.getElementById('payment_method').value,
-        transaction_ref: '',
-        status: document.getElementById('payment_status').value,
-      });
-      msg.textContent = 'Payment recorded!';
-      msg.className = 'form-message success';
-      document.getElementById('paymentForm').reset();
-      loadScheduleAndPayments(getSession().role);
-    } catch (error) {
-      msg.textContent = error.message;
-      msg.className = 'form-message error';
-    }
-  });
-
   document.getElementById('feedbackForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const msg = document.getElementById('feedbackMessage');
     try {
       await api.submitFeedback({
-        schedule_id: document.getElementById('feedback_schedule').value,
+        tutor_id: document.getElementById('feedback_tutor').value,
         rating: document.getElementById('feedback_rating').value,
         comment: document.getElementById('feedback_comment').value,
       });
       msg.textContent = 'Feedback submitted!';
       msg.className = 'form-message success';
       document.getElementById('feedbackForm').reset();
-      loadFeedback();
     } catch (error) {
       msg.textContent = error.message;
       msg.className = 'form-message error';
@@ -499,8 +445,4 @@ function setupFormListeners() {
       msg.className = 'form-message error';
     }
   });
-}
-
-function toMySQLDatetime(value) {
-  return value.replace('T', ' ') + ':00';
 }

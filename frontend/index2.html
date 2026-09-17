@@ -93,8 +93,6 @@
         <nav class="tabs" id="tabNav">
             <button class="tab-btn active" id="dashboardTabBtn" data-tab="tab-dashboard"
                 type="button">Dashboard</button>
-            <button class="tab-btn" id="scheduleTabBtn" data-tab="tab-schedule" type="button">Schedule &amp;
-                Payments</button>
             <button class="tab-btn" id="feedbackTabBtn" data-tab="tab-feedback" type="button">Feedback</button>
             <button class="tab-btn" data-tab="tab-messages" type="button">Messages</button>
             <button class="tab-btn" id="adminTabBtn" data-tab="tab-admin" type="button">Admin</button>
@@ -140,47 +138,12 @@
                 </div>
             </section>
 
-            <section id="tab-schedule" class="tab-panel">
-                <h2>Add a class schedule</h2>
-                <form id="scheduleForm" class="card-form">
-                    <label for="schedule_selection">Selection</label>
-                    <select id="schedule_selection" required></select>
-                    <label for="schedule_start">Start</label>
-                    <input type="datetime-local" id="schedule_start" required>
-                    <label for="schedule_end">End</label>
-                    <input type="datetime-local" id="schedule_end" required>
-                    <label for="schedule_location">Location</label>
-                    <input type="text" id="schedule_location">
-                    <button type="submit" class="btn-primary">Add schedule</button>
-                    <p class="form-message" id="scheduleMessage"></p>
-                </form>
-                <div id="scheduleList" class="card-list"></div>
-
-                <h2>Record a payment</h2>
-                <form id="paymentForm" class="card-form">
-                    <label for="payment_schedule">Class</label>
-                    <select id="payment_schedule" required></select>
-                    <label for="payment_amount">Amount (৳)</label>
-                    <input type="number" id="payment_amount" required>
-                    <label for="payment_method">Method</label>
-                    <input type="text" id="payment_method" placeholder="bKash, Bank Transfer, etc.">
-                    <label for="payment_status">Status</label>
-                    <select id="payment_status">
-                        <option value="Pending">Pending</option>
-                        <option value="Completed">Completed</option>
-                    </select>
-                    <button type="submit" class="btn-primary">Record payment</button>
-                    <p class="form-message" id="paymentMessage"></p>
-                </form>
-                <div id="paymentsList" class="card-list"></div>
-            </section>
-
             <section id="tab-feedback" class="tab-panel">
                 <div id="feedbackFormWrapper">
                     <h2>Leave feedback</h2>
                     <form id="feedbackForm" class="card-form">
-                        <label for="feedback_schedule">Class</label>
-                        <select id="feedback_schedule" required></select>
+                        <label for="feedback_tutor">Teacher</label>
+                        <select id="feedback_tutor" required></select>
                         <label for="feedback_rating">Rating (1-5)</label>
                         <input type="number" id="feedback_rating" min="1" max="5" required>
                         <label for="feedback_comment">Comment</label>
@@ -189,8 +152,11 @@
                         <p class="form-message" id="feedbackMessage"></p>
                     </form>
                 </div>
-                <h2>All feedback</h2>
-                <div id="feedbackList" class="card-list"></div>
+
+                <div id="myFeedbackWrapper" class="hidden">
+                    <h2>Feedback I've received</h2>
+                    <div id="myFeedbackList" class="card-list"></div>
+                </div>
             </section>
 
             <section id="tab-messages" class="tab-panel">
