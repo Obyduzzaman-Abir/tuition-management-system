@@ -34,7 +34,7 @@
                 <input type="text" id="reg_name" required>
                 <label for="reg_email">Email</label>
                 <input type="email" id="reg_email" required>
-                <label for="reg_phone">Phone</label>
+                <label for="reg_phone">Contact number</label>
                 <input type="text" id="reg_phone">
                 <label for="reg_password">Password</label>
                 <input type="password" id="reg_password" required>
@@ -45,9 +45,13 @@
                 </select>
 
                 <div id="studentFields">
+                    <label for="reg_institute">Institute</label>
+                    <input type="text" id="reg_institute">
+                    <label for="reg_class">Class</label>
+                    <input type="text" id="reg_class" placeholder="e.g. Class 8">
                     <label for="reg_guardian">Guardian name</label>
                     <input type="text" id="reg_guardian">
-                    <label for="reg_address">Address</label>
+                    <label for="reg_address">Location</label>
                     <input type="text" id="reg_address">
                 </div>
 
@@ -72,14 +76,23 @@
                 <h1 class="brand-heading">Tuition Management System</h1>
                 <p class="brand-tagline" id="welcomeText"></p>
             </div>
-            <button id="logoutBtn" class="btn-ghost" type="button">Log out</button>
+            <div class="header-actions">
+                <div class="notification-bell-wrapper">
+                    <button id="notificationBellBtn" class="bell-btn" type="button" aria-label="Notifications">
+                        🔔<span id="notificationBadge" class="notification-badge hidden">0</span>
+                    </button>
+                    <div id="notificationDropdown" class="notification-dropdown hidden">
+                        <p class="dropdown-title">Notifications</p>
+                        <div id="notificationDropdownList"></div>
+                    </div>
+                </div>
+                <button id="logoutBtn" class="btn-ghost" type="button">Log out</button>
+            </div>
         </header>
 
         <nav class="tabs" id="tabNav">
             <button class="tab-btn active" id="dashboardTabBtn" data-tab="tab-dashboard"
                 type="button">Dashboard</button>
-            <button class="tab-btn" id="scheduleTabBtn" data-tab="tab-schedule" type="button">Schedule &amp;
-                Payments</button>
             <button class="tab-btn" id="feedbackTabBtn" data-tab="tab-feedback" type="button">Feedback</button>
             <button class="tab-btn" data-tab="tab-messages" type="button">Messages</button>
             <button class="tab-btn" id="adminTabBtn" data-tab="tab-admin" type="button">Admin</button>
@@ -90,12 +103,21 @@
                 <div id="studentDashboard" class="hidden">
                     <h2>Post a tuition requirement</h2>
                     <form id="postForm" class="card-form">
-                        <label for="post_title">Title</label>
+                        <label for="post_title">Subject</label>
                         <input type="text" id="post_title" required>
                         <label for="post_description">Description</label>
                         <textarea id="post_description" rows="2"></textarea>
-                        <label for="post_budget">Salary (৳)</label>
+                        <label for="post_budget">Budget (৳)</label>
                         <input type="number" id="post_budget" required>
+                        <label for="post_days">Days per week</label>
+                        <input type="number" id="post_days" min="1" max="7">
+                        <label for="post_time">Preferred time</label>
+                        <select id="post_time">
+                            <option value="">Select...</option>
+                            <option value="Morning">Morning</option>
+                            <option value="Afternoon">Afternoon</option>
+                            <option value="Evening">Evening</option>
+                        </select>
                         <button type="submit" class="btn-primary">Post requirement</button>
                         <p class="form-message" id="postMessage"></p>
                     </form>
@@ -116,47 +138,12 @@
                 </div>
             </section>
 
-            <section id="tab-schedule" class="tab-panel">
-                <h2>Add a class schedule</h2>
-                <form id="scheduleForm" class="card-form">
-                    <label for="schedule_selection">Selection</label>
-                    <select id="schedule_selection" required></select>
-                    <label for="schedule_start">Start</label>
-                    <input type="datetime-local" id="schedule_start" required>
-                    <label for="schedule_end">End</label>
-                    <input type="datetime-local" id="schedule_end" required>
-                    <label for="schedule_location">Location</label>
-                    <input type="text" id="schedule_location">
-                    <button type="submit" class="btn-primary">Add schedule</button>
-                    <p class="form-message" id="scheduleMessage"></p>
-                </form>
-                <div id="scheduleList" class="card-list"></div>
-
-                <h2>Record a payment</h2>
-                <form id="paymentForm" class="card-form">
-                    <label for="payment_schedule">Class</label>
-                    <select id="payment_schedule" required></select>
-                    <label for="payment_amount">Amount (৳)</label>
-                    <input type="number" id="payment_amount" required>
-                    <label for="payment_method">Method</label>
-                    <input type="text" id="payment_method" placeholder="bKash, Bank Transfer, etc.">
-                    <label for="payment_status">Status</label>
-                    <select id="payment_status">
-                        <option value="Pending">Pending</option>
-                        <option value="Completed">Completed</option>
-                    </select>
-                    <button type="submit" class="btn-primary">Record payment</button>
-                    <p class="form-message" id="paymentMessage"></p>
-                </form>
-                <div id="paymentsList" class="card-list"></div>
-            </section>
-
             <section id="tab-feedback" class="tab-panel">
                 <div id="feedbackFormWrapper">
                     <h2>Leave feedback</h2>
                     <form id="feedbackForm" class="card-form">
-                        <label for="feedback_schedule">Class</label>
-                        <select id="feedback_schedule" required></select>
+                        <label for="feedback_tutor">Teacher</label>
+                        <select id="feedback_tutor" required></select>
                         <label for="feedback_rating">Rating (1-5)</label>
                         <input type="number" id="feedback_rating" min="1" max="5" required>
                         <label for="feedback_comment">Comment</label>
@@ -165,8 +152,11 @@
                         <p class="form-message" id="feedbackMessage"></p>
                     </form>
                 </div>
-                <h2>All feedback</h2>
-                <div id="feedbackList" class="card-list"></div>
+
+                <div id="myFeedbackWrapper" class="hidden">
+                    <h2>Feedback I've received</h2>
+                    <div id="myFeedbackList" class="card-list"></div>
+                </div>
             </section>
 
             <section id="tab-messages" class="tab-panel">
@@ -190,8 +180,7 @@
                     </form>
                 </div>
 
-                <h2>Notifications</h2>
-                <div id="notificationsList" class="card-list"></div>
+
             </section>
 
             <section id="tab-admin" class="tab-panel">
@@ -220,6 +209,9 @@
 
                 <h2>System log</h2>
                 <div id="systemLogList" class="card-list"></div>
+
+                <h2>All Feedback (Admin Review)</h2>
+                <div id="adminFeedbackList" class="card-list"></div>
             </section>
         </main>
     </div>
