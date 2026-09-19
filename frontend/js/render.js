@@ -3,12 +3,18 @@ function renderPostCard(post, showApplyButton = false) {
     ? `<button class="btn-secondary apply-btn" data-post-id="${post.post_id}">Apply</button>`
     : '';
   const scheduleInfo = (post.days_per_week || post.preferred_time)
-    ? `<p class="card-meta">${post.days_per_week ? post.days_per_week + ' days/week' : ''}${post.days_per_week && post.preferred_time ? ' · ' : ''}${post.preferred_time || ''}</p>`
+    ? `<p class="card-meta">${post.days_per_week ? post.days_per_week + ' days/week' : ''}${post.days_per_week && post.preferred_time ? ', ' : ''}${post.preferred_time || ''}</p>`
     : '';
+  const instituteLine = post.institute ? `<p class="card-meta">Institute: ${post.institute}</p>` : '';
+  const classLine = post.class_level ? `<p class="card-meta">Class: ${post.class_level}</p>` : '';
+  const locationLine = post.address ? `<p class="card-meta">Location: ${post.address}</p>` : '';
   return `
     <div class="card">
-      <h3>${post.title}</h3>
+      <h3>Subject: ${post.title}</h3>
       <p class="card-meta">Posted by ${post.student_name || 'you'}</p>
+      ${instituteLine}
+      ${classLine}
+      ${locationLine}
       <p class="card-meta">Budget: ৳${post.budget}</p>
       ${scheduleInfo}
       <span class="badge badge-${post.status.toLowerCase()}">${post.status}</span>

@@ -110,7 +110,8 @@ app.get('/api/subjects', async (req, res) => {
 app.get('/api/posts', async (req, res) => {
   try {
     const [posts] = await pool.query(`
-      SELECT tp.post_id, tp.title, tp.description, tp.budget, tp.status, tp.days_per_week, tp.preferred_time, u.name AS student_name
+      SELECT tp.post_id, tp.title, tp.description, tp.budget, tp.status, tp.days_per_week, tp.preferred_time,
+             u.name AS student_name, s.institute, s.class_level, s.address
       FROM Tuition_Post tp
       JOIN Student s ON tp.student_id = s.student_id
       JOIN Users u ON s.user_id = u.user_id
@@ -140,6 +141,13 @@ app.post('/api/posts', requireRole('Student'), async (req, res) => {
       'INSERT INTO Tuition_Post (student_id, title, description, budget, days_per_week, preferred_time) VALUES (?, ?, ?, ?, ?, ?)',
       [studentId, title, description || null, budget, days_per_week || null, preferred_time || null]
     );
+
+    const [tutors] = await pool.query("SELECT user_id FROM Users WHERE role = 'Tutor'");
+    if (tutors.length > 0) {
+      const notificationValues = tutors.map(t => [t.user_id, `New tuition post available: "${title}"`]);
+      await pool.query('INSERT INTO Notification (user_id, message) VALUES ?', [notificationValues]);
+    }
+
     res.status(201).json({ message: 'Tuition post created!', post_id: result.insertId });
   } catch (error) {
     res.status(500).json({ message: 'Failed to create post', error: error.message });
@@ -181,6 +189,20 @@ app.post('/api/applications', requireRole('Tutor'), async (req, res) => {
       'INSERT INTO Tutor_Application (post_id, tutor_id, message, proposed_rate) VALUES (?, ?, ?, ?)',
       [post_id, tutorId, message || null, proposed_rate]
     );
+
+    const [postOwner] = await pool.query(`
+      SELECT u.user_id, tp.title FROM Tuition_Post tp
+      JOIN Student s ON tp.student_id = s.student_id
+      JOIN Users u ON s.user_id = u.user_id
+      WHERE tp.post_id = ?
+    `, [post_id]);
+    if (postOwner.length > 0) {
+      await pool.query(
+        'INSERT INTO Notification (user_id, message) VALUES (?, ?)',
+        [postOwner[0].user_id, `New application received on "${postOwner[0].title}"`]
+      );
+    }
+
     res.status(201).json({ message: 'Application submitted!', application_id: result.insertId });
   } catch (error) {
     res.status(500).json({ message: 'Failed to submit application', error: error.message });
@@ -205,10 +227,11 @@ app.post('/api/select', requireRole('Student', 'Admin'), async (req, res) => {
     await pool.query('CALL SelectTutorForPost(?, ?)', [post_id, tutor_id]);
 
     const [postInfo] = await pool.query(
-      'SELECT student_id FROM Tuition_Post WHERE post_id = ?',
+      'SELECT student_id, title FROM Tuition_Post WHERE post_id = ?',
       [post_id]
     );
     const studentId = postInfo[0].student_id;
+    const postTitle = postInfo[0].title;
 
     const [existingConversation] = await pool.query(
       'SELECT conversation_id FROM Conversation WHERE student_id = ? AND tutor_id = ?',
@@ -218,6 +241,14 @@ app.post('/api/select', requireRole('Student', 'Admin'), async (req, res) => {
       await pool.query(
         'INSERT INTO Conversation (student_id, tutor_id) VALUES (?, ?)',
         [studentId, tutor_id]
+      );
+    }
+
+    const [tutorUser] = await pool.query('SELECT user_id FROM Tutor WHERE tutor_id = ?', [tutor_id]);
+    if (tutorUser.length > 0) {
+      await pool.query(
+        'INSERT INTO Notification (user_id, message) VALUES (?, ?)',
+        [tutorUser[0].user_id, `You have been selected for "${postTitle}"!`]
       );
     }
 
