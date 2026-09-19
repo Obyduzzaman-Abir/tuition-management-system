@@ -203,6 +203,7 @@ async function loadDashboard(role) {
         ? applications.map(app => renderApplicationCard(app, true)).join('')
         : '<p class="empty-state">No applications yet.</p>';
       attachSelectButtons();
+      attachReplyButtons();
     } else if (role === 'Tutor') {
       const [openPosts, myApplications] = await Promise.all([api.getOpenPosts(), api.getApplications()]);
       document.getElementById('openPostsList').innerHTML = openPosts.length
@@ -244,6 +245,21 @@ function attachInlineApplyListener(postId) {
     } catch (error) {
       alert(error.message);
     }
+  });
+}
+
+function attachReplyButtons() {
+  document.querySelectorAll('.reply-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      try {
+        const result = await api.startConversation({ tutor_id: btn.dataset.tutorId });
+        await loadMessages('Student');
+        document.querySelector('.tab-btn[data-tab="tab-messages"]').click();
+        openConversation(result.conversation_id);
+      } catch (error) {
+        alert(error.message);
+      }
+    });
   });
 }
 
@@ -293,8 +309,8 @@ async function loadAdminFeedback() {
 // ---------- Messages ----------
 async function loadMessages(role) {
   try {
-    const [selections, conversations, notifications] = await Promise.all([
-      api.getMySelections(), api.getConversations(), api.getNotifications(),
+    const [selections, conversations] = await Promise.all([
+      api.getMySelections(), api.getConversations(),
     ]);
 
     populateSelect(document.getElementById('conversation_partner'), selections,
@@ -305,9 +321,6 @@ async function loadMessages(role) {
       ? conversations.map(c => renderConversationCard(c, role)).join('')
       : '<p class="empty-state">No conversations yet.</p>';
     attachConversationOpenButtons();
-
-    document.getElementById('notificationsList').innerHTML = notifications.length
-      ? notifications.map(renderNotification).join('') : '<p class="empty-state">No notifications.</p>';
   } catch (error) {
     console.error('Messages load failed:', error);
   }

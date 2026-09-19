@@ -20,13 +20,18 @@ function renderApplicationCard(app, showSelectButton) {
   const selectBtn = showSelectButton && app.status === 'Pending'
     ? `<button class="btn-secondary select-tutor-btn" data-post-id="${app.post_id}" data-tutor-id="${app.tutor_id}">Select this tutor</button>`
     : '';
+  const replyBtn = showSelectButton
+    ? `<button class="btn-secondary reply-btn" data-tutor-id="${app.tutor_id}">Reply</button>`
+    : '';
   return `
     <div class="card">
       <h3>${app.post_title}</h3>
       <p class="card-meta">Tutor: ${app.tutor_name}</p>
       <p class="card-meta">Proposed rate: ৳${app.proposed_rate}</p>
+      <p class="card-meta">"${app.message || ''}"</p>
       <span class="badge badge-${app.status.toLowerCase()}">${app.status}</span>
       ${selectBtn}
+      ${replyBtn}
     </div>`;
 }
 

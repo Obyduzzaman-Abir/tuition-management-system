@@ -203,6 +203,24 @@ app.post('/api/select', requireRole('Student', 'Admin'), async (req, res) => {
       }
     }
     await pool.query('CALL SelectTutorForPost(?, ?)', [post_id, tutor_id]);
+
+    const [postInfo] = await pool.query(
+      'SELECT student_id FROM Tuition_Post WHERE post_id = ?',
+      [post_id]
+    );
+    const studentId = postInfo[0].student_id;
+
+    const [existingConversation] = await pool.query(
+      'SELECT conversation_id FROM Conversation WHERE student_id = ? AND tutor_id = ?',
+      [studentId, tutor_id]
+    );
+    if (existingConversation.length === 0) {
+      await pool.query(
+        'INSERT INTO Conversation (student_id, tutor_id) VALUES (?, ?)',
+        [studentId, tutor_id]
+      );
+    }
+
     res.status(200).json({ message: 'Tutor selected successfully!' });
   } catch (error) {
     res.status(500).json({ message: 'Failed to select tutor', error: error.message });
